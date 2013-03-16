@@ -28,12 +28,12 @@
     (catch 'system-error
            (lambda ()
              (cat-port (current-input-port)))
-           (error-handler "stdin")))
+           error-handler))
    ((file)
     (catch 'system-error
            (lambda ()
              (call-with-input-file file cat-port))
-           (error-handler file)))))
+           error-handler))))
 
 (define cat-port
   (case-lambda
@@ -45,11 +45,9 @@
       (put-u8 out byte)
       (cat-port in out)))))
 
-(define (error-handler label)
-  (lambda (key subr message args data)
-    (apply format (current-error-port)
-           (string-append "~a: " message "~%") label args)
-    (set! status #f)))
+(define (error-handler k . e)
+  (print-exception (current-error-port) #f k e)
+  (exit 1))
 
 (define (help _)
   (display "Usage: cat [OPTION]... [FILE]...\n")
